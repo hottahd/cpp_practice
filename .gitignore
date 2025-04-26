@@ -30,3 +30,15 @@
 *.exe
 *.out
 *.app
+
+# build directories
+build/
+
+# data directories
+data/
+
+# Mac files
+.DS_Store
+
+# zip files
+*.zip

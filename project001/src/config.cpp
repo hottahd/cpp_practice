@@ -1,0 +1,22 @@
+#include "config.hpp"
+#include <nlohmann/json.hpp>
+#include <cassert>
+
+using json = nlohmann::json;
+
+void Config::create_save_directory() const {
+    fs::path dir(save_dir);
+    if (!fs::exists(dir)) {
+        fs::create_directories(dir);
+    }
+}
+
+void Config::save() const {
+    json j;
+    j["save_dir"] = save_dir;
+
+    std::ofstream ofs(save_dir + "/config.json");
+    assert(ofs.is_open());
+    ofs << j.dump(4);
+}
+
