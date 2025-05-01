@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(GridExample)
+project(mhd_CPU)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
