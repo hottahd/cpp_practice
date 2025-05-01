@@ -1,33 +1,32 @@
-#include "quantity.hpp"
+#include "quantity.cuh"
+
+#include <cmath>
+
 #include "utility.hpp"
 #include "time.hpp"
-#include <cmath>
 
 template<typename Real>
 void Quantity<Real>::allocate_device(const Grid<Real>& grid) {
-    cudaMalloc(&q0_dev,  sizeof(Real) * grid.i_total);
-    cudaMalloc(&q1_dev,  sizeof(Real) * grid.i_total);
-    cudaMalloc(&q2_dev,  sizeof(Real) * grid.i_total);
-    cudaMalloc(&qq_dev,  sizeof(Real) * grid.i_total);
-    cudaMalloc(&dqq_dev, sizeof(Real) * grid.i_total);
+    assert(cudaMalloc(&q0_dev,  sizeof(Real) * grid.i_total) == cudaSuccess);
+    assert(cudaMalloc(&q1_dev,  sizeof(Real) * grid.i_total) == cudaSuccess);
+    assert(cudaMalloc(&q2_dev,  sizeof(Real) * grid.i_total) == cudaSuccess);
 }
 
 template<typename Real>
 void Quantity<Real>::upload_q0() {
-    cudaMemcpy(q0_dev, q0.data(), sizeof(Real) * q0.size(), cudaMemcpyHostToDevice);
+    assert(cudaMemcpy(q0_dev, q0.data(), sizeof(Real) * q0.size(), cudaMemcpyHostToDevice) == cudaSuccess);
 }
 
 template<typename Real>
 void Quantity<Real>::download_q0() {
-    cudaMemcpy(q0.data(), q0_dev, sizeof(Real) * q0.size(), cudaMemcpyDeviceToHost);
+    assert(cudaMemcpy(q0.data(), q0_dev, sizeof(Real) * q0.size(), cudaMemcpyDeviceToHost) == cudaSuccess);
 }
 
 template<typename Real>
 void Quantity<Real>::free_device() {
-    cudaFree(q1_dev);
-    cudaFree(q2_dev);
-    cudaFree(qq_dev);
-    cudaFree(dqq_dev);
+    cudaFree(q0_dev); q0_dev = nullptr;
+    cudaFree(q1_dev); q1_dev = nullptr;
+    cudaFree(q2_dev); q2_dev = nullptr;
 }
 
 template <typename Real>

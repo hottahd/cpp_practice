@@ -1,31 +1,36 @@
-#include "advection.cup"
-#include "grid.hpp"
-#include "iostream"
-#include "quantity.hpp"
+#include "advection.cuh"
+
 #include <vector>
 #include <cstdlib>
 #include <iostream>
 #include <cstdio>
 
-template<typename Real>
-__device__ void update_core_kernel(Real* q0, Real* q1, Real dx, Real dt, Real vc, int i) {
-    q1[i] = q0[i] - vc*(q0[i + 1] - q0[i - 1]) / (2.0 * dx) * dt;
-}
+#include "grid.cuh"
+#include "quantity.cuh"
+
 
 template<typename Real>
-__global__ void update_kernel(Real* q0, Real* q1, int i_total, Real dx, Real dt, Real vc) {
+__global__ void update_kernel(Real* q0, Real* q1, Grid_Device<Real> grid, Real dt, Real vc) {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i>=1 && i <= i_total-2) {
-        update_core_kernel(q0, q1, dx, dt, vc, i);
+    if (i>=1 && i <= grid.i_total-2) {
+        q1[i] = q0[i] - vc*(q0[i + 1] - q0[i - 1]) / (2.0 * grid.dx) * dt;
     }
 }
 
 template<typename Real>
-__global__ void bc_kernel(Real* qq, int i_total, int margin) {
+__global__ void bc_kernel(Real* qq, Grid_Device<Real> grid) {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i < margin) {
-        qq[i] = qq[i_total - 2*margin + i];
-        qq[i_total - margin + i] = qq[margin + i];
+    if (i < grid.margin) {
+        qq[i] = qq[grid.i_total - 2*grid.margin + i];
+        qq[grid.i_total - grid.margin + i] = qq[grid.margin + i];
+    }
+}
+
+template<typename Real>
+__global__ void final_kernel(Real* q0, Real* q2, Grid_Device<Real> grid) {
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < grid.i_total) {
+        q0[i] = 0.5*(q0[i] + q2[i]);
     }
 }
 
@@ -40,14 +45,32 @@ void Advection<Real>::cfl_condition() {
 };
 
 template <typename Real>
-void Advection<Real>::update() {
+void Advection<Real>::run() {
+
     cfl_condition();
+
+    quantity.allocate_device(grid);
+    quantity.upload_q0();
+    
+    while (time.time < time.tend) {
+        update();
+        time.update();
+        io_step();
+    };
+    quantity.free_device();
+
+}
+
+
+template <typename Real>
+void Advection<Real>::update() {
     sc2ssprk();
 }
 
 template <typename Real>
 void Advection<Real>::io_step() {
     if (time.time >= time.n_output * time.dt_output) {
+        quantity.download_q0();
         quantity.save(config, time);
         std::cout
         << "time = " 
@@ -65,37 +88,18 @@ void Advection<Real>::io_step() {
 
 template <typename Real>
 void Advection<Real>::sc2ssprk() {
-
-    quantity.allocate_device(grid);
-    quantity.upload_q0();
     
     int block_size = 256;
     int grid_size = (grid.i_total + block_size - 1) / block_size;
-    update_kernel<<<grid_size, block_size>>>(quantity.q0_dev, quantity.q1_dev, grid.i_total, grid.dx, time.dt, vc);
-    bc_kernel<<<grid_size, block_size>>>(quantity.q1_dev, grid.i_total, grid.margin);
+    update_kernel<<<grid_size, block_size>>>(quantity.q0_dev, quantity.q1_dev, grid_device, time.dt, vc);
+    bc_kernel<<<grid_size, block_size>>>(quantity.q1_dev, grid_device);
 
-    update_kernel<<<grid_size, block_size>>>(quantity.q1_dev, quantity.q2_dev, grid.i_total, grid.dx, time.dt, vc);
-    bc_kernel<<<grid_size, block_size>>>(quantity.q2_dev, grid.i_total, grid.margin);
-    cudaDeviceSynchronize();
-
-    cudaMemcpy(quantity.q1.data(), quantity.q1_dev, sizeof(Real) * grid.i_total, cudaMemcpyDeviceToHost);
-    cudaMemcpy(quantity.q2.data(), quantity.q2_dev, sizeof(Real) * grid.i_total, cudaMemcpyDeviceToHost);
+    update_kernel<<<grid_size, block_size>>>(quantity.q1_dev, quantity.q2_dev, grid_device, time.dt, vc);
+    bc_kernel<<<grid_size, block_size>>>(quantity.q2_dev, grid_device);
     
-    for ( int i = 0; i < grid.i_total; ++i) {
-        quantity.q0[i] = 0.5*( quantity.q0[i] + quantity.q2[i] );
-    }
-
-    quantity.free_device();
+    final_kernel<<<grid_size, block_size>>>(quantity.q0_dev, quantity.q2_dev, grid_device);
 
 }
-
-// template<typename Real>
-// void Advection<Real>::sc2(std::vector<Real>& qq, std::vector<Real>& dqq, Grid<Real>& grid, Real& dt, Real& vc) {
-
-//     for (int i = 1; i < grid.i_total - 1; ++i) {
-//         dqq[i] = -vc * (qq[i + 1] - qq[i - 1]) / (2.0 * grid.dx)*dt;
-//     };
-// }
 
 template<typename Real>
 void Advection<Real>::bc(std::vector<Real>& qq, Grid<Real>& grid) {

@@ -1,11 +1,12 @@
 #include <iostream>
 #include <string>
+
 #include "config.hpp"
-#include "grid.hpp"
+#include "grid.cuh"
 #include "time.hpp"
-#include "quantity.hpp"
+#include "quantity.cuh"
 #include "types.hpp"
-#include "advection.cup"
+#include "advection.cuh"
 
 int main() {
     std::string save_dir = "../data";
@@ -30,12 +31,13 @@ int main() {
 
     advection.io_step();
 
-    while (advection.time.time < advection.time.tend) {
-        advection.update();
-        advection.time.update();
+    advection.run();
+    // while (advection.time.time < advection.time.tend) {
+    //     advection.update();
+    //     advection.time.update();
 
-        advection.io_step();
-    };
+    //     advection.io_step();
+    // };
         
     return 0;
 }
