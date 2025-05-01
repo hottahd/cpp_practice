@@ -1,6 +1,8 @@
 #include "config.hpp"
-#include <nlohmann/json.hpp>
+
 #include <cassert>
+
+#include <nlohmann/json.hpp>
 
 using json = nlohmann::json;
 

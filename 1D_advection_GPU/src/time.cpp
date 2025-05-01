@@ -1,5 +1,4 @@
 #include "time.hpp"
-#include <iostream>
 
 template <typename Real>
 void Time<Real>::update() {
