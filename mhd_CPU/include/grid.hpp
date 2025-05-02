@@ -18,14 +18,10 @@ struct Grid {
     Real xmin, xmax, ymin, ymax, zmin, zmax;
     std::vector<Real> x, y, z, dx, dy, dz;
         
-    Grid(int i_size_, int j_size_, int k_size_, int margin_,
-        Real xmin_, Real xmax_, Real ymin_, Real ymax_, Real zmin_, Real zmax_)
-        : i_size(i_size_), j_size(j_size_), k_size(k_size_),
-        margin(margin_), 
-        xmin(xmin_), xmax(xmax_),
-        ymin(ymin_), ymax(ymax_),
-        zmin(zmin_), zmax(zmax_)
-        {
+    Grid(int i_size_, int j_size_, int k_size_, int margin_, Real xmin_, Real xmax_, Real ymin_, Real ymax_, Real zmin_, Real zmax_) :
+        i_size(i_size_), j_size(j_size_), k_size(k_size_), margin(margin_),
+        xmin(xmin_), xmax(xmax_), ymin(ymin_), ymax(ymax_), zmin(zmin_), zmax(zmax_) {
+
             assert(i_size > 0);
             assert(j_size > 0);
             assert(k_size > 0);
@@ -47,7 +43,7 @@ struct Grid {
             k_total = k_size + 2*margin;
     
     
-            auto set_x = [](std::vector<Real>& x, std::vector <Real>& dx, int i_size, int i_total, int x_margin, Real xmin, Real xmax) {
+            auto set_coordinate = [](std::vector<Real>& x, std::vector <Real>& dx, int i_size, int i_total, int x_margin, Real xmin, Real xmax) {
                 x.resize(i_total);
                 dx.resize(i_total);
     
@@ -65,9 +61,9 @@ struct Grid {
                     x[i] = x[i + 1] - dx[i];
                 }
             };
-            set_x(x, dx, i_size, i_total, x_margin, xmin, xmax);
-            set_x(y, dy, j_size, j_total, y_margin, ymin, ymax);
-            set_x(z, dz, k_size, k_total, z_margin, zmin, zmax);
+            set_coordinate(x, dx, i_size, i_total, x_margin, xmin, xmax);
+            set_coordinate(y, dy, j_size, j_total, y_margin, ymin, ymax);
+            set_coordinate(z, dz, k_size, k_total, z_margin, zmin, zmax);
         }
 
     void save(const Config& config) const {
@@ -97,4 +93,20 @@ struct Grid {
         write_array(y);
         write_array(z);
     }  
+
+
+    static Grid from_config(const json& config_json) {
+        return Grid(
+            config_json["grid"]["i_size"].get<int>(), 
+            config_json["grid"]["j_size"].get<int>(),
+            config_json["grid"]["k_size"].get<int>(),
+            config_json["grid"]["margin"].get<int>(),
+            config_json["grid"]["xmin"].get<Real>(),
+            config_json["grid"]["xmax"].get<Real>(),
+            config_json["grid"]["ymin"].get<Real>(),
+            config_json["grid"]["ymax"].get<Real>(),
+            config_json["grid"]["zmin"].get<Real>(),
+            config_json["grid"]["zmax"].get<Real>()
+        );
+    }
 };

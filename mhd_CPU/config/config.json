@@ -1,0 +1,25 @@
+{
+    "base": {
+        "save_dir" : "../data",
+    },
+    "time": {
+        "tend": 1.0,
+        "dt_output": 0.1,
+    },
+    "grid": {
+        "i_size": 128,
+        "j_size": 1,
+        "k_size": 1,
+        "margin": 2,
+        "xmin": 0.0,
+        "xmax": 1.0,
+        "ymin": 0.0,
+        "ymax": 1.0,
+        "zmin": 0.0,
+        "zmax": 1.0,
+    },
+    "eos": {
+        "gm": 1.0,
+    },
+    }
+}

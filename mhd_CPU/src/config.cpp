@@ -1,6 +1,8 @@
 #include "config.hpp"
-#include <nlohmann/json.hpp>
+
 #include <cassert>
+
+#include <nlohmann/json.hpp>
 
 using json = nlohmann::json;
 
@@ -13,7 +15,6 @@ void Config::create_save_directory() const {
 
 void Config::save() const {
     json j;
-    j["save_dir"] = save_dir;
 
     std::ofstream ofs(save_dir + "/config.json");
     assert(ofs.is_open());
