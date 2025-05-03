@@ -2,6 +2,8 @@
 #include <cassert>
 #include <nlohmann/json.hpp>
 
+#include "utility.hpp"
+
 using json = nlohmann::json;
 
 template <typename Real>
@@ -28,11 +30,24 @@ struct Time{
         n_step++;
     };
     
+    void save(const Config& config) const {
+        std::ostringstream fname;
+        fname << config.save_dir << "/time." << util::zfill(n_step, n_output_digits) << ".txt";
+        std::ofstream ofs(fname.str());
+        assert(ofs.is_open());
+        ofs << time << "\n";
+        ofs << n_output << "\n";
+        ofs << n_step << "\n";
 
-    static Time from_config(const json& config_json) {
+        std::ofstream ofs_step(config.save_dir + "/time_output.txt");
+        assert(ofs_step.is_open());
+        ofs_step << n_output << "\n";
+    }
+
+    static Time from_config(const json& json_obj) {
         return Time(
-            config_json["Time"]["tend"],
-            config_json["Time"]["dt_output"],
-            config_json["Time"]["n_output_digits"]);
+            json_obj["time"]["tend"],
+            json_obj["time"]["dt_output"],
+            json_obj["time"]["n_output_digits"]);
     }
 };

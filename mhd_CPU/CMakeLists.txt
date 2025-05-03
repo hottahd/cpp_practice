@@ -17,6 +17,7 @@ target_link_libraries(a.out
     nlohmann_json::nlohmann_json
 )
 
+# Testing
 include(FetchContent)
 FetchContent_Declare(
     Catch2 
@@ -25,18 +26,15 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(Catch2)
 
-add_executable(tests
-    tests/test_main.cpp
-    tests/test_array3d.cpp
-)
+file(GLOB TEST_SOURCES "tests/*.cpp")
+
+add_executable(tests ${TEST_SOURCES})
 target_link_libraries(tests 
     PRIVATE
     Catch2::Catch2WithMain
     OpenMP::OpenMP_CXX
     nlohmann_json::nlohmann_json
 )
-
-message(STATUS "Catch2 source dir: ${Catch2_SOURCE_DIR}")
 
 target_include_directories(tests PRIVATE
     ${CMAKE_SOURCE_DIR}/include

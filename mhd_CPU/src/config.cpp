@@ -14,10 +14,8 @@ void Config::create_save_directory() const {
 }
 
 void Config::save() const {
-    json j;
-
     std::ofstream ofs(save_dir + "/config.json");
     assert(ofs.is_open());
-    ofs << j.dump(4);
+    ofs << json_obj.dump(4);
 }
 

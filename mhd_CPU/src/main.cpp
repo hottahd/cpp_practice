@@ -2,38 +2,57 @@
 #include <string>
 #include <cstdlib>
 
-#include "types.hpp"
 #include "config.hpp"
-#include "time.hpp"
-#include "grid.hpp"
-#include "mhd.hpp"
 #include "model.hpp"
+#include "time_integrator.hpp"
+
+struct Init {
+    double xm;
+    double rol, prl, vvl;
+    double ror, prr, vvr;
+};
+
+void initial_condition(Model<Real>& model, const Init& init);
 
 int main() {
-    Config config("config/config.json");
-    config.create_save_directory();
-    config.save();
+    Model<Real> model = Model<Real>::from_config_file("../config/config.json");
+    model.save_metadata();
 
-    Grid<Real> grid = Grid<Real>::from_config(config.config_json);
-    grid.save(config);
+    Init init;
+    init.rol = 1.0  ; init.prl = 1.0; init.vvl = 0.0;
+    init.ror = 0.125; init.prr = 0.1; init.vvr = 0.0;
 
-    Real tend = 1.0, dt_output = 0.1;
-    Time<Real> time = Time<Real>::from_config(config.config_json);
-
-    MHD<Real> mhd(grid);
-    mhd.initial_condition(grid);
-    mhd.save(config, time);
-
-    Model<Real> model(config, time, grid, mhd);
-
-    // advection.io_step();
-
-    // while (advection.time.time < advection.time.tend) {
-    //     advection.update();
-    //     advection.time.update();
-
-    //     advection.io_step();
-    // };
-        
+    initial_condition(model, init);
+    model.save_state();
     return 0;
+}
+
+void initial_condition(Model<Real>& model, const Init& init) {
+    MHDCore<Real>& qq = model.mhd.qq;
+    const auto& grid = model.grid;
+    const auto& eos = model.eos;
+
+
+    for (int i = 0; i < grid.i_total; ++i) {
+        for (int j = 0; j < grid.j_total; ++j) {
+            for (int k = 0; k < grid.k_total; ++k) {
+
+                qq.vy(i, j, k) = 0.0;
+                qq.vz(i, j, k) = 0.0;
+                qq.bx(i, j, k) = 0.0;
+                qq.by(i, j, k) = 0.0;
+                qq.bz(i, j, k) = 0.0;
+
+                if (grid.x[i] < 0.5) {
+                    qq.ro(i, j, k) = init.rol;
+                    qq.ph(i, j, k) = init.prl / (eos.gm - 1.0) / qq.ro(i, j, k);
+                    qq.vx(i, j, k) = init.vvl;
+                } else {
+                    qq.ro(i, j, k) = init.ror;
+                    qq.ph(i, j, k) = init.prr / (eos.gm - 1.0) / qq.ro(i, j, k);
+                    qq.vx(i, j, k) = init.vvr;
+                }
+            }
+        }
+    }
 }

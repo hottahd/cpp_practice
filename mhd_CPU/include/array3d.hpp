@@ -14,9 +14,15 @@ class Array3D {
             array(i_total_ * j_total_ * k_total_) {}
 
         T& operator()(int i, int j, int k) {
+            assert(i >= 0 && i < i_total);
+            assert(j >= 0 && j < j_total);
+            assert(k >= 0 && k < k_total);
             return array[i * j_total * k_total + j * k_total + k];
         }
         const T& operator()(int i, int j, int k) const {
+            assert(i >= 0 && i < i_total);
+            assert(j >= 0 && j < j_total);
+            assert(k >= 0 && k < k_total);
             return array[i * j_total * k_total + j * k_total + k];
         }
 

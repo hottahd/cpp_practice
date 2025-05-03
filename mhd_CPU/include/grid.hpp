@@ -16,7 +16,7 @@ struct Grid {
     int margin;
     int x_margin, y_margin, z_margin;
     Real xmin, xmax, ymin, ymax, zmin, zmax;
-    std::vector<Real> x, y, z, dx, dy, dz;
+    std::vector<Real> x, y, z, dx, dy, dz, dxi, dyi, dzi;
         
     Grid(int i_size_, int j_size_, int k_size_, int margin_, Real xmin_, Real xmax_, Real ymin_, Real ymax_, Real zmin_, Real zmax_) :
         i_size(i_size_), j_size(j_size_), k_size(k_size_), margin(margin_),
@@ -38,19 +38,21 @@ struct Grid {
             y_margin = margin*js;
             z_margin = margin*ks;
 
-            i_total = i_size + 2*margin;
-            j_total = j_size + 2*margin;
-            k_total = k_size + 2*margin;
+            i_total = i_size + 2*x_margin;
+            j_total = j_size + 2*y_margin;
+            k_total = k_size + 2*z_margin;
     
     
-            auto set_coordinate = [](std::vector<Real>& x, std::vector <Real>& dx, int i_size, int i_total, int x_margin, Real xmin, Real xmax) {
+            auto set_coordinate = [](std::vector<Real>& x, std::vector<Real>& dx, std::vector<Real>& dxi, int i_size, int i_total, int x_margin, Real xmin, Real xmax) {
                 x.resize(i_total);
                 dx.resize(i_total);
+                dxi.resize(i_total);
     
                 double dx0 = (xmax - xmin) / i_size;
                 for (int i = 0; i < i_total; ++i) {
                     // dx at i + 1/2
                     dx[i] = dx0;
+                    dxi[i] = 1.0 / dx[i];
                 }
     
                 x[x_margin] = xmin + 0.5*dx[x_margin];
@@ -61,28 +63,12 @@ struct Grid {
                     x[i] = x[i + 1] - dx[i];
                 }
             };
-            set_coordinate(x, dx, i_size, i_total, x_margin, xmin, xmax);
-            set_coordinate(y, dy, j_size, j_total, y_margin, ymin, ymax);
-            set_coordinate(z, dz, k_size, k_total, z_margin, zmin, zmax);
+            set_coordinate(x, dx, dxi, i_size, i_total, x_margin, xmin, xmax);
+            set_coordinate(y, dy, dyi, j_size, j_total, y_margin, ymin, ymax);
+            set_coordinate(z, dz, dzi, k_size, k_total, z_margin, zmin, zmax);
         }
 
     void save(const Config& config) const {
-        json j;
-        j["i_size"] = i_size;
-        j["j_size"] = j_size;
-        j["k_size"] = k_size;    
-        j["margin"] = margin;
-        j["xmin"] = xmin;
-        j["xmax"] = xmax;
-        j["ymin"] = ymin;
-        j["ymax"] = ymax;
-        j["zmin"] = zmin;
-        j["zmax"] = zmax;
-    
-        std::ofstream ofs_json(config.save_dir + "/grid.json");
-        assert(ofs_json.is_open());
-        ofs_json << j.dump(4);
-    
         std::ofstream ofs_bin(config.save_dir + "/grid.bin", std::ios::binary);
         assert(ofs_bin.is_open());
 
@@ -95,18 +81,18 @@ struct Grid {
     }  
 
 
-    static Grid from_config(const json& config_json) {
+    static Grid from_config(const json& json_obj) {
         return Grid(
-            config_json["grid"]["i_size"].get<int>(), 
-            config_json["grid"]["j_size"].get<int>(),
-            config_json["grid"]["k_size"].get<int>(),
-            config_json["grid"]["margin"].get<int>(),
-            config_json["grid"]["xmin"].get<Real>(),
-            config_json["grid"]["xmax"].get<Real>(),
-            config_json["grid"]["ymin"].get<Real>(),
-            config_json["grid"]["ymax"].get<Real>(),
-            config_json["grid"]["zmin"].get<Real>(),
-            config_json["grid"]["zmax"].get<Real>()
+            json_obj.at("grid").at("i_size").get<int>(), 
+            json_obj.at("grid").at("j_size").get<int>(),
+            json_obj.at("grid").at("k_size").get<int>(),
+            json_obj.at("grid").at("margin").get<int>(),
+            json_obj.at("grid").at("xmin").get<Real>(),
+            json_obj.at("grid").at("xmax").get<Real>(),
+            json_obj.at("grid").at("ymin").get<Real>(),
+            json_obj.at("grid").at("ymax").get<Real>(),
+            json_obj.at("grid").at("zmin").get<Real>(),
+            json_obj.at("grid").at("zmax").get<Real>()
         );
     }
 };
