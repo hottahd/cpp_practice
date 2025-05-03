@@ -14,7 +14,7 @@ struct Grid {
     int i_total, j_total, k_total;
     int is, js, ks;
     int margin;
-    int x_margin, y_margin, z_margin;
+    int i_margin, j_margin, k_margin;
     Real xmin, xmax, ymin, ymax, zmin, zmax;
     std::vector<Real> x, y, z, dx, dy, dz, dxi, dyi, dzi;
         
@@ -34,38 +34,38 @@ struct Grid {
             js = j_size > 1 ? 1 : 0;
             ks = k_size > 1 ? 1 : 0;
 
-            x_margin = margin*is;
-            y_margin = margin*js;
-            z_margin = margin*ks;
+            i_margin = margin*is;
+            j_margin = margin*js;
+            k_margin = margin*ks;
 
-            i_total = i_size + 2*x_margin;
-            j_total = j_size + 2*y_margin;
-            k_total = k_size + 2*z_margin;
+            i_total = i_size + 2*i_margin;
+            j_total = j_size + 2*j_margin;
+            k_total = k_size + 2*k_margin;
     
     
-            auto set_coordinate = [](std::vector<Real>& x, std::vector<Real>& dx, std::vector<Real>& dxi, int i_size, int i_total, int x_margin, Real xmin, Real xmax) {
+            auto set_coordinate = [](std::vector<Real>& x, std::vector<Real>& dx, std::vector<Real>& dxi, int i_size, int i_total, int i_margin, Real xmin, Real xmax) {
                 x.resize(i_total);
                 dx.resize(i_total);
                 dxi.resize(i_total);
     
-                double dx0 = (xmax - xmin) / i_size;
+                Real dx0 = (xmax - xmin) / i_size;
                 for (int i = 0; i < i_total; ++i) {
                     // dx at i + 1/2
                     dx[i] = dx0;
                     dxi[i] = 1.0 / dx[i];
                 }
     
-                x[x_margin] = xmin + 0.5*dx[x_margin];
-                for (int i = x_margin + 1; i < i_total; ++i) {
+                x[i_margin] = xmin + 0.5*dx[i_margin];
+                for (int i = i_margin + 1; i < i_total; ++i) {
                     x[i] = x[i - 1] + dx[i - 1];
                 }
-                for (int i = x_margin - 1; i >= 0; --i) {
+                for (int i = i_margin - 1; i >= 0; --i) {
                     x[i] = x[i + 1] - dx[i];
                 }
             };
-            set_coordinate(x, dx, dxi, i_size, i_total, x_margin, xmin, xmax);
-            set_coordinate(y, dy, dyi, j_size, j_total, y_margin, ymin, ymax);
-            set_coordinate(z, dz, dzi, k_size, k_total, z_margin, zmin, zmax);
+            set_coordinate(x, dx, dxi, i_size, i_total, i_margin, xmin, xmax);
+            set_coordinate(y, dy, dyi, j_size, j_total, j_margin, ymin, ymax);
+            set_coordinate(z, dz, dzi, k_size, k_total, k_margin, zmin, zmax);
         }
 
     void save(const Config& config) const {

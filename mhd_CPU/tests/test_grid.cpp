@@ -31,7 +31,7 @@ TEST_CASE("Test Grid constructor and accessors") {
     REQUIRE(grid.z.size() == grid.k_total);
 
     // Check dx values
-    for (int i = grid.x_margin; i < grid.i_total-grid.margin; ++i) {
+    for (int i = grid.i_margin; i < grid.i_total-grid.margin; ++i) {
         REQUIRE(grid.dx[i] > 0);
         REQUIRE(grid.x[i] >= grid.xmin); 
         REQUIRE(grid.x[i] <= grid.xmax);

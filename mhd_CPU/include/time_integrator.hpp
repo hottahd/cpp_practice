@@ -2,9 +2,10 @@
 
 #include "model.hpp"
 #include "constants.hpp"
+#include "boundary_condition.hpp"
 
 template <typename Real>
-inline Real space_centered_4th (const Array3D<Real>& qq, double dxi, int i, int j, int k, int is, int js, int ks) {
+inline Real space_centered_4th (const Array3D<Real>& qq, Real dxi, int i, int j, int k, int is, int js, int ks) {
     return (
         -     qq(i + 2*is, j + 2*js, k + 2*ks)
         + 8.0*qq(i +   is, j +   js, k +   ks)
@@ -14,7 +15,7 @@ inline Real space_centered_4th (const Array3D<Real>& qq, double dxi, int i, int 
 };
 
 template <typename Real>
-inline Real space_centered_4th (const Array3D<Real>& qq1, const Array3D<Real>& qq2, double dxi, int i, int j, int k, int is, int js, int ks) {
+inline Real space_centered_4th (const Array3D<Real>& qq1, const Array3D<Real>& qq2, Real dxi, int i, int j, int k, int is, int js, int ks) {
     return (
         -     qq1(i + 2*is, j + 2*js, k + 2*ks)*qq2(i + 2*is, j + 2*js, k + 2*ks)
         + 8.0*qq1(i +   is, j +   js, k +   ks)*qq2(i +   is, j +   js, k +   ks)
@@ -24,7 +25,7 @@ inline Real space_centered_4th (const Array3D<Real>& qq1, const Array3D<Real>& q
 };
 
 template <typename Real>
-inline Real space_centered_4th (const Array3D<Real>& qq1, const Array3D<Real>& qq2, const Array3D<Real>& qq3, double dxi, int i, int j, int k, int is, int js, int ks) {
+inline Real space_centered_4th (const Array3D<Real>& qq1, const Array3D<Real>& qq2, const Array3D<Real>& qq3, Real dxi, int i, int j, int k, int is, int js, int ks) {
     return (
         -     qq1(i + 2*is, j + 2*js, k + 2*ks)*qq2(i + 2*is, j + 2*js, k + 2*ks)*qq3(i + 2*is, j + 2*js, k + 2*ks)
         + 8.0*qq1(i +   is, j +   js, k +   ks)*qq2(i +   is, j +   js, k +   ks)*qq3(i +   is, j +   js, k +   ks)
@@ -83,11 +84,11 @@ struct TimeIntegrator {
             }
         }
 
-        for (int i = grid.x_margin; i < grid.i_total-grid.x_margin; ++i) {
+        for (int i = grid.i_margin; i < grid.i_total-grid.i_margin; ++i) {
             const Real dxi = grid.dxi(i);
-            for (int j = grid.y_margin; j < grid.j_total-grid.y_margin; ++j) {
+            for (int j = grid.j_margin; j < grid.j_total-grid.j_margin; ++j) {
                 const Real dyi = grid.dyi(j);
-                for (int k = grid.z_margin; k < grid.k_total-grid.z_margin; ++k) {
+                for (int k = grid.k_margin; k < grid.k_total-grid.k_margin; ++k) {
                     const Real dzi = grid.dzi(k);
 
                     // equation of continuity
@@ -200,4 +201,22 @@ struct TimeIntegrator {
             }
         }
     }
+
+    void runge_kutta_4step(Model<Real>& model){
+        MHDCore<Real>& qq     = model.mhd.qq;
+        MHDCore<Real>& qq_argm = model.mhd.qq_argm;
+        MHDCore<Real>& qq_rslt = model.mhd.qq_rslt;
+
+        update_sc4(qq     , qq     , qq_rslt, time.dt/4.0);
+        qq_argm.copy_from(qq_rslt);
+        update_sc4(qq     , qq_argm, qq_rslt, time.dt/3.0);
+        qq_argm.copy_from(qq_rslt);
+        update_sc4(qq     , qq_argm, qq_rslt, time.dt/2.0);
+        qq_argm.copy_from(qq_rslt);
+        update_sc4(qq     , qq_argm, qq_rslt, time.dt     );
+        qq.copy_from(qq_rslt);
+    }   
 };
+
+
+

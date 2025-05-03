@@ -22,6 +22,17 @@ struct MHDCore {
           bz(i_size, j_size, k_size),
           ei(i_size, j_size, k_size),
           ph(i_size, j_size, k_size) {}
+    void copy_from(const MHDCore& other) {
+        ro.copy_from(other.ro);
+        vx.copy_from(other.vx);
+        vy.copy_from(other.vy);
+        vz.copy_from(other.vz);
+        bx.copy_from(other.bx);
+        by.copy_from(other.by);
+        bz.copy_from(other.bz);
+        ei.copy_from(other.ei);
+        ph.copy_from(other.ph);
+    }
 };
 
 template <typename Real>

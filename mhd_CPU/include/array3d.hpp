@@ -33,4 +33,11 @@ class Array3D {
         int size_y () const { return j_total; }
         int size_z () const { return k_total; }
         int size () const { return i_total * j_total * k_total; }
+
+        void copy_from(const Array3D& other) {
+            assert(i_total == other.i_total);
+            assert(j_total == other.j_total);
+            assert(k_total == other.k_total);
+            std::copy(other.array.begin(), other.array.end(), array.begin());
+        }
 };

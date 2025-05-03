@@ -6,19 +6,20 @@
 #include "model.hpp"
 #include "time_integrator.hpp"
 
+template <typename Real>
 struct Init {
-    double xm;
-    double rol, prl, vvl;
-    double ror, prr, vvr;
+    Real xm;
+    Real rol, prl, vvl;
+    Real ror, prr, vvr;
 };
 
-void initial_condition(Model<Real>& model, const Init& init);
+void initial_condition(Model<Real>& model, const Init<Real>& init);
 
 int main() {
     Model<Real> model = Model<Real>::from_config_file("../config/config.json");
     model.save_metadata();
 
-    Init init;
+    Init<Real> init;
     init.rol = 1.0  ; init.prl = 1.0; init.vvl = 0.0;
     init.ror = 0.125; init.prr = 0.1; init.vvr = 0.0;
 
@@ -27,7 +28,7 @@ int main() {
     return 0;
 }
 
-void initial_condition(Model<Real>& model, const Init& init) {
+void initial_condition(Model<Real>& model, const Init<Real>& init) {
     MHDCore<Real>& qq = model.mhd.qq;
     const auto& grid = model.grid;
     const auto& eos = model.eos;
