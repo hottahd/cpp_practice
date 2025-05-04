@@ -18,11 +18,11 @@ struct BoundaryCondition {
           mhd(model.mhd) {}
 
     void bnd_symmetric(Array3D<Real>& arr, Array3D<Real>* fac, Real sign, std::string direction, std::string bnd_type){
-        int i0, i1, j0, j1, k0, k1;
-        bnd_range(i0, i1, j0, j1, k0, k1, direction);
-        for (int i = i0; i < i1; ++i) {
-            for (int j = j0; j < j1; ++j) {
-                for (int k = k0; k < k1; ++k) {
+        int i0_, i1_, j0_, j1_, k0_, k1_;
+        bnd_range(i0_, i1_, j0_, j1_, k0_, k1_, direction);
+        for (int i = i0_; i < i1_; ++i) {
+            for (int j = j0_; j < j1_; ++j) {
+                for (int k = k0_; k < k1_; ++k) {
                     int i_ghst = i, i_trgt = i;
                     int j_ghst = j, j_trgt = j;
                     int k_ghst = k, k_trgt = k;
@@ -43,16 +43,16 @@ struct BoundaryCondition {
         }
     };
 
-    void bnd_range(int& i0, int& i1, int& j0, int& j1, int& k0, int& k1, std::string direction) {
-        i0 = 0; i1 = grid.i_total;
-        j0 = 0; j1 = grid.j_total;
-        k0 = 0; k1 = grid.k_total;
-        if (direction == "x") { i1 = grid.i_margin; }
-        else if (direction == "y") { j1 = grid.j_margin; }
-        else if (direction == "z") { k1 = grid.k_margin; }
+    inline void bnd_range(int& i0_, int& i1_, int& j0_, int& j1_, int& k0_, int& k1_, std::string direction) {
+        i0_ = 0; i1_ = grid.i_total;
+        j0_ = 0; j1_ = grid.j_total;
+        k0_ = 0; k1_ = grid.k_total;
+        if (direction == "x") { i1_ = grid.i_margin; }
+        else if (direction == "y") { j1_ = grid.j_margin; }
+        else if (direction == "z") { k1_ = grid.k_margin; }
     }
 
-    void bnd_symmetric_index(int i, int i_total, int i_margin, int& i_ghst, int& i_trgt, std::string bnd_type) {
+    inline void bnd_symmetric_index(int i, int i_total, int i_margin, int& i_ghst, int& i_trgt, std::string bnd_type) {
         if (bnd_type == "inner") {
             i_ghst = i;
             i_trgt = 2*i_margin - i - 1;
