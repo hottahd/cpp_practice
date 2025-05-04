@@ -61,4 +61,24 @@ struct BoundaryCondition {
             i_trgt = i_total - i_margin - i - 1;
         }
     }
+
+    void apply(MHDCore<Real>& qq) {
+        // Apply boundary conditions to the MHD core variables
+        std::vector<std::string> directions = {"x", "y", "z"};
+        std::vector<std::string> bnd_types  = {"inner", "outer"};
+        
+        for (const auto& dir : directions) {
+            for (const auto& btype : bnd_types) {
+                bnd_symmetric(qq.ro, nullptr, 1.0, dir, btype);
+                bnd_symmetric(qq.vx, nullptr, 1.0, dir, btype);
+                bnd_symmetric(qq.vy, nullptr, 1.0, dir, btype);
+                bnd_symmetric(qq.vz, nullptr, 1.0, dir, btype);
+                bnd_symmetric(qq.bx, nullptr, 1.0, dir, btype);
+                bnd_symmetric(qq.by, nullptr, 1.0, dir, btype);
+                bnd_symmetric(qq.bz, nullptr, 1.0, dir, btype);
+                bnd_symmetric(qq.ei, nullptr, 1.0, dir, btype);
+                bnd_symmetric(qq.ph, nullptr, 1.0, dir, btype);
+            }
+        }        
+    }
 };

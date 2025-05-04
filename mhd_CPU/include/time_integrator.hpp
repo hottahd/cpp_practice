@@ -42,6 +42,8 @@ struct TimeIntegrator {
     EOS<Real> eos;
     MHD<Real> mhd;
 
+    BoundaryCondition<Real> bc;
+
     Array3D<Real> pr, bb, ht, vb;
     
     TimeIntegrator(Model<Real>& model)
@@ -50,6 +52,7 @@ struct TimeIntegrator {
           grid(model.grid),
           eos(model.eos),
           mhd(model.mhd),
+          bc(model),
           pr(grid.i_total, grid.j_total, grid.k_total),
           bb(grid.i_total, grid.j_total, grid.k_total),
           ht(grid.i_total, grid.j_total, grid.k_total),
@@ -209,12 +212,16 @@ struct TimeIntegrator {
 
         update_sc4(qq     , qq     , qq_rslt, time.dt/4.0);
         qq_argm.copy_from(qq_rslt);
+        bc.apply(qq_argm);
         update_sc4(qq     , qq_argm, qq_rslt, time.dt/3.0);
-        qq_argm.copy_from(qq_rslt);
+        qq_argm.copy_from(qq_argm);
+        bc.apply(qq_argm);
         update_sc4(qq     , qq_argm, qq_rslt, time.dt/2.0);
         qq_argm.copy_from(qq_rslt);
+        bc.apply(qq_argm);
         update_sc4(qq     , qq_argm, qq_rslt, time.dt     );
         qq.copy_from(qq_rslt);
+        bc.apply(qq);
     }   
 };
 

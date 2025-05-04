@@ -17,8 +17,7 @@ struct Model {
     MHD<Real> mhd;
 
     Model(Config config_, Time<Real> time_, Grid<Real> grid_, EOS<Real> eos_, MHD<Real> mhd_)
-        : config(config_), time(time_), grid(grid_), eos(eos_), mhd(mhd_) {
-        }
+        : config(config_), time(time_), grid(grid_), eos(eos_), mhd(mhd_) {}
 
     void save_metadata() {
         this->config.create_save_directory();
