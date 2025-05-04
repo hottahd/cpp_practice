@@ -42,3 +42,6 @@ data/
 
 # zip files
 *.zip
+
+# VS code
+.vscode/
