@@ -21,5 +21,8 @@
     },
     "eos": {
         "gm": 1.4
+    },
+    "time_integrator": {
+        "cfl_number": 0.4
     }
 }

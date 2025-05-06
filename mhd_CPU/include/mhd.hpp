@@ -38,11 +38,13 @@ struct MHDCore {
 template <typename Real>
 struct MHD {
     MHDCore<Real> qq, qq_argm, qq_rslt;
+    Real cfl_number;
     
     MHD(const Grid<Real>& grid)
         : qq     (grid.i_total, grid.j_total, grid.k_total),
           qq_argm(grid.i_total, grid.j_total, grid.k_total),
-          qq_rslt(grid.i_total, grid.j_total, grid.k_total) {}
+          qq_rslt(grid.i_total, grid.j_total, grid.k_total) {
+          }
 
     void save(const Config& config, const Time<Real>& time) const {
         std::ofstream ofs(config.save_dir + "/mhd."+ util::zfill(time.n_output, time.n_output_digits) +".bin", std::ios::binary);
@@ -61,6 +63,5 @@ struct MHD {
         write_array(qq.ei);
         write_array(qq.ph);
         ofs.close();
-    
     };
 };
