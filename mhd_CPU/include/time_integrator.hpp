@@ -7,35 +7,36 @@
 #include "model.hpp"
 #include "constants.hpp"
 #include "boundary_condition.hpp"
+#include "artificial_viscosity.hpp"
 
 template <typename Real>
-inline Real space_centered_4th (const Array3D<Real>& qq, Real dxi, int i, int j, int k, int is, int js, int ks) {
+inline Real space_centered_4th (const Array3D<Real>& qq, Real dxyzi, int i, int j, int k, int is, int js, int ks) {
     return (
         -     qq(i + 2*is, j + 2*js, k + 2*ks)
         + 8.0*qq(i +   is, j +   js, k +   ks)
         - 8.0*qq(i -   is, j -   js, k -   ks)
         +     qq(i - 2*is, j - 2*js, k - 2*ks)
-    )*inv12<Real>*dxi;
+    )*inv12<Real>*dxyzi;
 };
 
 template <typename Real>
-inline Real space_centered_4th (const Array3D<Real>& qq1, const Array3D<Real>& qq2, Real dxi, int i, int j, int k, int is, int js, int ks) {
+inline Real space_centered_4th (const Array3D<Real>& qq1, const Array3D<Real>& qq2, Real dxyzi, int i, int j, int k, int is, int js, int ks) {
     return (
         -     qq1(i + 2*is, j + 2*js, k + 2*ks)*qq2(i + 2*is, j + 2*js, k + 2*ks)
         + 8.0*qq1(i +   is, j +   js, k +   ks)*qq2(i +   is, j +   js, k +   ks)
         - 8.0*qq1(i -   is, j -   js, k -   ks)*qq2(i -   is, j -   js, k -   ks)
         +     qq1(i - 2*is, j - 2*js, k - 2*ks)*qq2(i - 2*is, j - 2*js, k - 2*ks)
-    )*inv12<Real>*dxi;
+    )*inv12<Real>*dxyzi;
 };
 
 template <typename Real>
-inline Real space_centered_4th (const Array3D<Real>& qq1, const Array3D<Real>& qq2, const Array3D<Real>& qq3, Real dxi, int i, int j, int k, int is, int js, int ks) {
+inline Real space_centered_4th (const Array3D<Real>& qq1, const Array3D<Real>& qq2, const Array3D<Real>& qq3, Real dxyzi, int i, int j, int k, int is, int js, int ks) {
     return (
         -     qq1(i + 2*is, j + 2*js, k + 2*ks)*qq2(i + 2*is, j + 2*js, k + 2*ks)*qq3(i + 2*is, j + 2*js, k + 2*ks)
         + 8.0*qq1(i +   is, j +   js, k +   ks)*qq2(i +   is, j +   js, k +   ks)*qq3(i +   is, j +   js, k +   ks)
         - 8.0*qq1(i -   is, j -   js, k -   ks)*qq2(i -   is, j -   js, k -   ks)*qq3(i -   is, j -   js, k -   ks)
         +     qq1(i - 2*is, j - 2*js, k - 2*ks)*qq2(i - 2*is, j - 2*js, k - 2*ks)*qq3(i - 2*is, j - 2*js, k - 2*ks)
-    )*inv12<Real>*dxi;
+    )*inv12<Real>*dxyzi;
 };
 
 template <typename Real>
@@ -52,6 +53,7 @@ struct TimeIntegrator {
     MHD<Real>& mhd;
 
     BoundaryCondition<Real> bc;
+    ArtificialViscosity<Real> artdiff;
 
     Array3D<Real> pr, bb, ht, vb;
     Real cfl_number;
@@ -64,6 +66,7 @@ struct TimeIntegrator {
           eos(model_.eos),
           mhd(model_.mhd),
           bc(model_),
+          artdiff(model_),
           pr(grid.i_total, grid.j_total, grid.k_total),
           bb(grid.i_total, grid.j_total, grid.k_total),
           ht(grid.i_total, grid.j_total, grid.k_total),
@@ -185,16 +188,17 @@ struct TimeIntegrator {
                 // ei: is the internal energy per unit mass 
                     const Real Et = 
                         + qq_orgn.ro(i,j,k)*qq_orgn.ei(i,j,k)
+                        + 0.5*qq_orgn.ro(i, j, k)*(
+                            + qq_orgn.vx(i, j, k)*qq_orgn.vx(i, j, k)
+                            + qq_orgn.vy(i, j, k)*qq_orgn.vy(i, j, k)
+                            + qq_orgn.vz(i, j, k)*qq_orgn.vz(i, j, k)
+                        )
                         + pii8<Real>*(
                             + qq_orgn.bx(i,j,k)*qq_orgn.bx(i,j,k)
                             + qq_orgn.by(i,j,k)*qq_orgn.by(i,j,k)
                             + qq_orgn.bz(i,j,k)*qq_orgn.bz(i,j,k)
                         )
-                        + 0.5*qq_orgn.ro(i, j, k)*(
-                            + qq_orgn.vx(i, j, k)*qq_orgn.vx(i, j, k)
-                            + qq_orgn.vy(i, j, k)*qq_orgn.vy(i, j, k)
-                            + qq_orgn.vz(i, j, k)*qq_orgn.vz(i, j, k)
-                        );
+                        ;
 
                     qq_rslt.ei(i, j, k) = ( Et + dt * (
                         -space_centered_4th(ht, qq_argm.vx, dxi, i, j, k, grid.is, 0, 0)
@@ -202,18 +206,15 @@ struct TimeIntegrator {
                         -space_centered_4th(ht, qq_argm.vz, dzi, i, j, k, 0, 0, grid.ks)
                         -space_centered_4th(vb, qq_argm.bx, dxi, i, j, k, grid.is, 0, 0)*pii4<Real>
                         -space_centered_4th(vb, qq_argm.by, dyi, i, j, k, 0, grid.js, 0)*pii4<Real>
-                        -space_centered_4th(vb, qq_argm.bz, dzi, i, j, k, 0, 0, grid.ks)*pii4<Real>
+                        -space_centered_4th(vb, qq_argm.bz, dzi, i, j, k, 0, 0, grid.ks)*pii4<Real>  )
                         -0.5*qq_rslt.ro(i,j,k)*(
                             + qq_rslt.vx(i,j,k)*qq_rslt.vx(i,j,k)
                             + qq_rslt.vy(i,j,k)*qq_rslt.vy(i,j,k)
-                            + qq_rslt.vz(i,j,k)*qq_rslt.vz(i,j,k)
-                        )
+                            + qq_rslt.vz(i,j,k)*qq_rslt.vz(i,j,k) )
                         - pii8<Real>*(
                             + qq_rslt.bx(i,j,k)*qq_rslt.bx(i,j,k)
                             + qq_rslt.by(i,j,k)*qq_rslt.by(i,j,k)
-                            + qq_rslt.bz(i,j,k)*qq_rslt.bz(i,j,k)
-                            )
-                        )
+                            + qq_rslt.bz(i,j,k)*qq_rslt.bz(i,j,k) )
                     )/qq_rslt.ro(i, j, k);
 
                 }
@@ -241,20 +242,24 @@ struct TimeIntegrator {
     }
 
     void cfl_condition() {
-        // cs: sound speed, vv: fluid velocity
-        Real cs, vv;
 
         this->time.dt = 1.e10;
 
         for (int i = grid.i_margin; i < grid.i_total-grid.i_margin; ++i) {
             for (int j = grid.j_margin; j < grid.j_total-grid.j_margin; ++j) {
                 for (int k = grid.k_margin; k < grid.k_total-grid.k_margin; ++k) {
-                    cs = std::sqrt(this->eos.gm*(this->eos.gm-1.0)*this->mhd.qq.ei(i,j,k));
-                    vv = std::sqrt(
+                    // cs: sound speed, vv: fluid velocity, ca: Alfvén speed
+                    Real cs = std::sqrt(this->eos.gm*(this->eos.gm-1.0)*this->mhd.qq.ei(i,j,k));
+                    Real vv = std::sqrt(
                         + this->mhd.qq.vx(i,j,k)*this->mhd.qq.vx(i,j,k)
                         + this->mhd.qq.vy(i,j,k)*this->mhd.qq.vy(i,j,k)
                         + this->mhd.qq.vz(i,j,k)*this->mhd.qq.vz(i,j,k)
-                    );                    
+                    );  
+                    Real ca = std::sqrt( (
+                        + this->mhd.qq.bx(i,j,k)*this->mhd.qq.bx(i,j,k)
+                        + this->mhd.qq.by(i,j,k)*this->mhd.qq.by(i,j,k)
+                        + this->mhd.qq.bz(i,j,k)*this->mhd.qq.bz(i,j,k)
+                    )/this->mhd.qq.ro(i,j,k)*pii4<Real>);
                     this->time.dt = std::min(this->time.dt, 
                             cfl_number*std::min<Real>({this->grid.dx[i], this->grid.dy[j], this->grid.dz[k]})/(cs + vv));
                 }
@@ -269,9 +274,21 @@ struct TimeIntegrator {
         model.save_if_needed();
         while (this->time.time < this->time.tend) {
 
+            // basic MHD time integration
             cfl_condition();
             runge_kutta_4step();
 
+            // artificial vicosities
+            artdiff.characteristic_velocity_eval();
+            artdiff.update(mhd.qq, mhd.qq_rslt, artdiff.cc, grid.dxi, "x");
+            bc.apply(mhd.qq_rslt);
+            mhd.qq.copy_from(mhd.qq_rslt);
+            artdiff.update(mhd.qq, mhd.qq_rslt, artdiff.cc, grid.dyi, "y");
+            bc.apply(mhd.qq_rslt);
+            mhd.qq.copy_from(mhd.qq_rslt);
+            artdiff.update(mhd.qq, mhd.qq_rslt, artdiff.cc, grid.dzi, "z");
+            bc.apply(mhd.qq_rslt);
+            mhd.qq.copy_from(mhd.qq_rslt);
 
             // Time is update after all procedures
             this->time.update();

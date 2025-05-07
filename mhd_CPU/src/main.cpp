@@ -53,17 +53,17 @@ void initial_condition(Model<Real>& model, const Init<Real>& init) {
 
                 qq.vx(i, j, k) = 0.0;
                 qq.ei(i, j, k) = 1.0;
-                qq.ro(i, j, k) = 1.0 + 0.1*std::exp(-pow2((grid.x[i] - 0.5) / 0.1));
+                qq.ro(i, j, k) = 1.0 + 0.3*std::exp(-pow2((grid.x[i] - 0.5) / 0.1));
 
-                // if (grid.x[i] < 0.5) {
-                //     qq.ro(i, j, k) = init.rol;
-                //     qq.ei(i, j, k) = init.prl / (eos.gm - 1.0) / qq.ro(i, j, k);
-                //     qq.vx(i, j, k) = init.vvl;
-                // } else {
-                //     qq.ro(i, j, k) = init.ror;
-                //     qq.ei(i, j, k) = init.prr / (eos.gm - 1.0) / qq.ro(i, j, k);
-                //     qq.vx(i, j, k) = init.vvr;
-                // }
+                if (grid.x[i] < 0.5) {
+                    qq.ro(i, j, k) = init.rol;
+                    qq.ei(i, j, k) = init.prl / (eos.gm - 1.0) / qq.ro(i, j, k);
+                    qq.vx(i, j, k) = init.vvl;
+                } else {
+                    qq.ro(i, j, k) = init.ror;
+                    qq.ei(i, j, k) = init.prr / (eos.gm - 1.0) / qq.ro(i, j, k);
+                    qq.vx(i, j, k) = init.vvr;
+                }
 
                 
 

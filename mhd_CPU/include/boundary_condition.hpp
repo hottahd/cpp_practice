@@ -101,25 +101,25 @@ struct BoundaryCondition {
         
         for (const auto& dir : directions) {
             for (const auto& btype : bnd_types) {
-                // bnd_symmetric(qq.ro, nullptr, 1.0, dir, btype);
-                // bnd_symmetric(qq.vx, nullptr, 1.0, dir, btype);
-                // bnd_symmetric(qq.vy, nullptr, 1.0, dir, btype);
-                // bnd_symmetric(qq.vz, nullptr, 1.0, dir, btype);
-                // bnd_symmetric(qq.bx, nullptr, 1.0, dir, btype);
-                // bnd_symmetric(qq.by, nullptr, 1.0, dir, btype);
-                // bnd_symmetric(qq.bz, nullptr, 1.0, dir, btype);
-                // bnd_symmetric(qq.ei, nullptr, 1.0, dir, btype);
-                // bnd_symmetric(qq.ph, nullptr, 1.0, dir, btype);
+                bnd_symmetric(qq.ro, nullptr, 1.0, dir, btype);
+                bnd_symmetric(qq.vx, nullptr, 1.0, dir, btype);
+                bnd_symmetric(qq.vy, nullptr, 1.0, dir, btype);
+                bnd_symmetric(qq.vz, nullptr, 1.0, dir, btype);
+                bnd_symmetric(qq.bx, nullptr, 1.0, dir, btype);
+                bnd_symmetric(qq.by, nullptr, 1.0, dir, btype);
+                bnd_symmetric(qq.bz, nullptr, 1.0, dir, btype);
+                bnd_symmetric(qq.ei, nullptr, 1.0, dir, btype);
+                bnd_symmetric(qq.ph, nullptr, 1.0, dir, btype);
 
-                bnd_periodic(qq.ro, dir, btype);
-                bnd_periodic(qq.vx, dir, btype);
-                bnd_periodic(qq.vy, dir, btype);
-                bnd_periodic(qq.vz, dir, btype);
-                bnd_periodic(qq.bx, dir, btype);
-                bnd_periodic(qq.by, dir, btype);
-                bnd_periodic(qq.bz, dir, btype);
-                bnd_periodic(qq.ei, dir, btype);
-                bnd_periodic(qq.ph, dir, btype);
+                // bnd_periodic(qq.ro, dir, btype);
+                // bnd_periodic(qq.vx, dir, btype);
+                // bnd_periodic(qq.vy, dir, btype);
+                // bnd_periodic(qq.vz, dir, btype);
+                // bnd_periodic(qq.bx, dir, btype);
+                // bnd_periodic(qq.by, dir, btype);
+                // bnd_periodic(qq.bz, dir, btype);
+                // bnd_periodic(qq.ei, dir, btype);
+                // bnd_periodic(qq.ph, dir, btype);
 }
         }        
     }

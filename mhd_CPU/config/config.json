@@ -3,12 +3,12 @@
         "save_dir" : "../data"
     },
     "time": {
-        "tend": 1.0,
-        "dt_output": 0.1,
+        "tend": 0.2,
+        "dt_output": 0.01,
         "n_output_digits": 8
     },
     "grid": {
-        "i_size": 128,
+        "i_size": 1024,
         "j_size": 1,
         "k_size": 1,
         "margin": 2,
@@ -23,6 +23,10 @@
         "gm": 1.4
     },
     "time_integrator": {
-        "cfl_number": 0.4
+        "cfl_number": 0.5
+    },
+    "artificial_viscosity": {
+        "ep": 1.0,
+        "fh": 1.0
     }
 }

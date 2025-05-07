@@ -4,6 +4,8 @@ project(mhd_CPU)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
+set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
+
 find_package(nlohmann_json REQUIRED)
 find_package(OpenMP REQUIRED)
 
